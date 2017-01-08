@@ -1,0 +1,1 @@
+0|1|pgsql|{{ with secret "secret/dbmail/postgresql/user" }}{{ .Data.value }}{{ end }}|{{ with secret "secret/dbmail/postgresql/password" }}{{ .Data.value }}{{ end }}|mail|{{ if env "DB_ADDR" }}{{ env "DB_ADDR" }}{{ else if service "db" }}{{ range service "db" }}{{ .Address }}{{ end }}{{ else }}db.weave.local{{ end }}|
