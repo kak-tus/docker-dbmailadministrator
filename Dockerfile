@@ -1,23 +1,28 @@
-FROM alpine:3.4
+FROM alpine:3.5
 
-COPY consul-template_0.16.0_SHA256SUMS /usr/local/bin/consul-template_0.16.0_SHA256SUMS
-COPY DBMA_SQL_V3_SHA256SUMS /var/www/DBMA_SQL_V3_SHA256SUMS
+ENV CONSUL_TEMPLATE_VERSION=0.18.2
+ENV CONSUL_TEMPLATE_SHA256=6fee6ab68108298b5c10e01357ea2a8e4821302df1ff9dd70dd9896b5c37217c
+
+ENV DBMA_VERSION=3
+ENV DBMA_SHA256=629172c54ff00d4a2cb2f4f250f93373d31eba995f601794abe5894731fca09d
 
 RUN \
-  apk add --update-cache curl unzip apache2 apache2-utils perl perl-cgi \
+  apk add --no-cache --virtual .build-deps curl unzip \
+
+  && apk add --no-cache apache2 apache2-utils perl perl-cgi \
   perl-dbd-pg perl-dbd-mysql perl-digest-md5 \
 
   && cd /usr/local/bin \
-  && curl -L https://releases.hashicorp.com/consul-template/0.16.0/consul-template_0.16.0_linux_amd64.zip -o consul-template_0.16.0_linux_amd64.zip \
-  && sha256sum -c consul-template_0.16.0_SHA256SUMS \
-  && unzip consul-template_0.16.0_linux_amd64.zip \
-  && rm consul-template_0.16.0_linux_amd64.zip consul-template_0.16.0_SHA256SUMS \
+  && curl -L https://releases.hashicorp.com/consul-template/${CONSUL_TEMPLATE_VERSION}/consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip -o consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip \
+  && echo -n "$CONSUL_TEMPLATE_SHA256  consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip" | sha256sum -c - \
+  && unzip consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip \
+  && rm consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip \
 
   && cd /var/www \
-  && curl -L http://dbma.ca/DBMA_SQL_V3.tar -o DBMA_SQL_V3.tar \
-  && sha256sum -c DBMA_SQL_V3_SHA256SUMS \
-  && tar -xvf DBMA_SQL_V3.tar \
-  && rm -rf DBMA_SQL_V3.tar \
+  && curl -L http://dbma.ca/DBMA_SQL_V${DBMA_VERSION}.tar -o DBMA_SQL_V${DBMA_VERSION}.tar \
+  && echo -n "$DBMA_SHA256  DBMA_SQL_V${DBMA_VERSION}.tar" | sha256sum -c - \
+  && tar -xvf DBMA_SQL_V${DBMA_VERSION}.tar \
+  && rm -rf DBMA_SQL_V${DBMA_VERSION}.tar \
   && chmod 755 /var/www/dbmailadministrator/*.cgi \
 
   && mkdir -p /run/apache2 \
@@ -25,7 +30,7 @@ RUN \
   && ln -sf /proc/1/fd/1 /var/log/apache2/access.log \
   && ln -sf /proc/1/fd/2 /var/log/apache2/error.log \
 
-  && apk del curl unzip && rm -rf /var/cache/apk/*
+  && apk del .build-deps
 
 ENV CONSUL_HTTP_ADDR=
 ENV CONSUL_TOKEN=
@@ -36,4 +41,4 @@ COPY service.conf /etc/apache2/conf.d/service.conf
 COPY apache.hcl /etc/apache.hcl
 COPY DBMA_CONFIG.DB.template /root/DBMA_CONFIG.DB.template
 
-CMD consul-template -config /etc/apache.hcl
+CMD ["/usr/local/bin/consul-template", "-config", "/etc/apache.hcl"]
