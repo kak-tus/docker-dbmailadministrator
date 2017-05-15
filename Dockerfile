@@ -7,10 +7,18 @@ ENV DBMA_VERSION=3
 ENV DBMA_SHA256=629172c54ff00d4a2cb2f4f250f93373d31eba995f601794abe5894731fca09d
 
 RUN \
-  apk add --no-cache --virtual .build-deps curl unzip \
+  apk add --no-cache --virtual .build-deps \
+    curl \
+    unzip \
 
-  && apk add --no-cache apache2 apache2-utils perl perl-cgi \
-  perl-dbd-pg perl-dbd-mysql perl-digest-md5 \
+  && apk add --no-cache \
+    apache2 \
+    apache2-utils \
+    perl \
+    perl-cgi \
+    perl-dbd-mysql \
+    perl-dbd-pg \
+    perl-digest-md5 \
 
   && cd /usr/local/bin \
   && curl -L https://releases.hashicorp.com/consul-template/${CONSUL_TEMPLATE_VERSION}/consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip -o consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip \
