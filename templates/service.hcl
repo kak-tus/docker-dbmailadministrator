@@ -1,7 +1,7 @@
 max_stale = "2m"
 
 template {
-  source = "/root/DBMA_CONFIG.DB.template"
+  source = "/root/templates/DBMA_CONFIG.DB.template"
   destination = "/var/www/dbmailadministrator/DBMA_CONFIG.DB"
 }
 

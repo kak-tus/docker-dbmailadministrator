@@ -1,0 +1,22 @@
+0|1|pgsql|
+{{- with secret "secret/mail/postgresql/user" }}{{ .Data.value }}{{ end }}|
+{{- with secret "secret/mail/postgresql/password" }}{{ .Data.value }}{{ end }}|mail|
+{{- if env "DB_ADDR" }}
+  {{- env "DB_ADDR" }}
+{{- else if service "db" }}
+  {{- range $s := service "db~_agent" | toJSON | plugin "rttfix" | parseJSON }}
+    {{- if not ( scratch.Key "addr1" ) }}
+      {{- scratch.Set "addr1" "1" }}
+      {{- $s.Address }}
+    {{- end }}
+  {{- end }}
+{{- else }}
+  {{- range $dc := datacenters true }}
+    {{- range $s := $dc | printf "db@%s" | service | toJSON | plugin "rttfix" | parseJSON }}
+      {{- if not ( scratch.Key "addr2" ) }}
+        {{- scratch.Set "addr2" "1" }}
+        {{- $s.Address }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}'
