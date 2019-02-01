@@ -1,8 +1,8 @@
-FROM alpine:3.7 AS build
+FROM alpine:3.9 AS build
 
 ENV \
-  CONSUL_TEMPLATE_VERSION=0.19.4 \
-  CONSUL_TEMPLATE_SHA256=5f70a7fb626ea8c332487c491924e0a2d594637de709e5b430ecffc83088abc0 \
+  CONSUL_TEMPLATE_VERSION=0.19.5 \
+  CONSUL_TEMPLATE_SHA256=e6b376701708b901b0548490e296739aedd1c19423c386eb0b01cfad152162af \
   \
   RTTFIX_VERSION=0.1 \
   RTTFIX_SHA256=349b309c8b4ba0afe3acf7a0b0173f9e68fffc0f93bad4b3087735bd094dea0d \
@@ -34,7 +34,7 @@ RUN \
   && rm -rf DBMA_SQL_V${DBMA_VERSION}.tar \
   && chmod 755 /var/www/dbmailadministrator/*.cgi
 
-FROM alpine:3.7
+FROM alpine:3.9
 
 RUN \
   apk add --no-cache \
