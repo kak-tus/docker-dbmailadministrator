@@ -7,8 +7,8 @@ ENV \
   RTTFIX_VERSION=0.1 \
   RTTFIX_SHA256=349b309c8b4ba0afe3acf7a0b0173f9e68fffc0f93bad4b3087735bd094dea0d \
   \
-  DBMA_VERSION=3 \
-  DBMA_SHA256=ac7d2b78ac945c89e3214f1ad28508490e17ff8a019e966c06da5f4b9e8d9de5
+  DBMA_VERSION=3.0.2 \
+  DBMA_SHA256=9cf1389d49557ff368241b2a6f197729e3a447c819acdaa82eba05154a57f1b5
 
 RUN \
   apk add --no-cache \
@@ -28,13 +28,16 @@ RUN \
   \
   && mkdir -p /var/www \
   && cd /var/www \
-  && curl -L http://dbma.ca/DBMA_SQL_V${DBMA_VERSION}.tar -o DBMA_SQL_V${DBMA_VERSION}.tar \
-  && echo -n "$DBMA_SHA256  DBMA_SQL_V${DBMA_VERSION}.tar" | sha256sum -c - \
-  && tar -xvf DBMA_SQL_V${DBMA_VERSION}.tar \
-  && rm -rf DBMA_SQL_V${DBMA_VERSION}.tar \
+  && curl -L https://github.com/kak-tus/dbmailadministrator/archive/v${DBMA_VERSION}.zip -o DBMA_SQL_V${DBMA_VERSION}.zip \
+  && echo -n "$DBMA_SHA256  DBMA_SQL_V${DBMA_VERSION}.zip" | sha256sum -c - \
+  && unzip DBMA_SQL_V${DBMA_VERSION}.zip \
+  && mv dbmailadministrator-${DBMA_VERSION} dbmailadministrator \
+  && rm -rf DBMA_SQL_V${DBMA_VERSION}.zip \
   && chmod 755 /var/www/dbmailadministrator/*.cgi
 
 FROM alpine:3.9
+
+COPY --from=build /var/www/dbmailadministrator /var/www/dbmailadministrator
 
 RUN \
   apk add --no-cache \
@@ -50,7 +53,8 @@ RUN \
   && mkdir -p /run/apache2 \
   && mkdir -p /var/log/apache \
   && ln -sf /proc/1/fd/1 /var/log/apache2/access.log \
-  && ln -sf /proc/1/fd/2 /var/log/apache2/error.log
+  && ln -sf /proc/1/fd/2 /var/log/apache2/error.log \
+  && chown -R apache:apache /var/www/dbmailadministrator
 
 ENV \
   CONSUL_HTTP_ADDR= \
@@ -62,6 +66,5 @@ COPY service.conf /etc/apache2/conf.d/service.conf
 COPY templates /root/templates
 COPY --from=build /usr/local/bin/consul-template /usr/local/bin/consul-template
 COPY --from=build /usr/local/bin/rttfix /usr/local/bin/rttfix
-COPY --from=build /var/www/dbmailadministrator /var/www/dbmailadministrator
 
 CMD ["/usr/local/bin/consul-template", "-config", "/root/templates/service.hcl"]
